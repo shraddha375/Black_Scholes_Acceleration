@@ -1,4 +1,4 @@
-Black–Scholes Option Pricing (Hardware-Oriented Implementation)
+**Black–Scholes Option Pricing (Hardware-Oriented Implementation)**
 
 Implemented a hardware-oriented Black–Scholes option pricing engine using a finite state machine (FSM) control structure to sequence the computation deterministically. The design evaluates European call and put prices using fixed-point arithmetic, emphasizing predictable execution, numerical stability, and explicit control over intermediate operations.
 
