@@ -73,3 +73,5 @@ These results highlight the effectiveness of FPGA acceleration for time-critical
 - Lookup-table-based nonlinear functions are effective for deterministic execution
 - FSM-based control simplifies timing analysis and resource reuse
 - Hardware specialization dominates performance over general-purpose embedded execution
+
+  
