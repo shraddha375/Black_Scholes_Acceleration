@@ -4,4 +4,4 @@ Implemented a hardware-oriented Black–Scholes option pricing engine using a fi
 
 Rather than deeply pipelining the computation, the system was structured as a modular FSM with clearly defined computation stages, enabling straightforward pipelining or parallelization in future revisions. Key considerations included fixed-point error management, state-level resource reuse, and accuracy–latency tradeoffs when mapping a continuous financial model onto constrained digital hardware.
 
-Whitepaper and Project Presenation Slides are included in /Documentation/ folder.
+Whitepaper and Project Presenation Slides are included in `Documentation/`](Documentation/) folder.
