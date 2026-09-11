@@ -1,27 +1,7 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/04/2025 04:49:45 PM
-// Design Name: 
-// Module Name: exp
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module exp(
-    input logic signed [15:0] x_in,
+    input  logic signed [15:0] x_in,
     output logic signed [15:0] exp_out
     );
     
@@ -38,7 +18,7 @@ module exp(
 
     // Compute ROM address
     logic [15:0] offset;
-    logic [9:0] addr;
+    logic [9:0]  addr;
 
     always_comb begin
         offset = x_clamped + 16'd10240;  // shift range to [0, 10240]
