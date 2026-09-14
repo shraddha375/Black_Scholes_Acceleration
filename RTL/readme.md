@@ -2,7 +2,7 @@
 
 This SystemVerilog module computes the **Cumulative Distribution Function (CDF) of a Normal Distribution** ($\Phi(x)$) over the range $x \in [-5.0, 5.0]$ using a **Look-Up Table (LUT) with Linear Interpolation**.
 
-Unlike the previous modules, this code uses a **Q4.12 fixed-point format** and performs piecewise-linear interpolation to improve calculation precision between ROM entries.
+Unlike other modules, this code uses a **Q4.12 fixed-point format** and performs piecewise-linear interpolation to improve calculation precision between ROM entries.
 
 ---
 
