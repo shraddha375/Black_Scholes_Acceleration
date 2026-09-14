@@ -1,6 +1,6 @@
 # `norm_cdf.sv`
 
-This SystemVerilog module computes the **Cumulative Distribution Function (CDF) of a Normal Distribution** ($\Phi(x)$) over the range $x \in [-5.0, 5.0]$ using a **Look-Up Table (LUT) with Linear Interpolation**.
+This SystemVerilog module computes the **Cumulative Distribution Function (CDF) of a Normal Distribution** $\Phi(x)$ over the range $x \in [-5.0, 5.0]$ using a **Look-Up Table (LUT) with Linear Interpolation**.
 
 Unlike other modules, this code uses a **Q4.12 fixed-point format** and performs piecewise-linear interpolation to improve calculation precision between ROM entries.
 
@@ -74,7 +74,7 @@ end
 ```
 
 * **Domain Shift:** Adding `20480` shifts the input domain from $[-5.0, +5.0]$ to $[0.0, 10.0]$ (`0` to `40960` in Q4.12). A 17-bit register (`x_offset`) is used to prevent signed overflow during addition.
-* **Base Address (`addr`):** Dividing by `80` divides the domain into steps of $\frac{80}{4096} \approx 0.01953$.
+   * **Base Address (`addr`):** Dividing by `80` divides the domain into steps of $\frac{80}{4096} \approx 0.01953$.
 * Max address: $40960 \div 80 = \mathbf{512}$ (requires a **513-entry ROM**).
 
 
