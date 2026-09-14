@@ -82,6 +82,42 @@ end
 
 ---
 
+#### 3. Dual-Port ROM Lookup & Linear Interpolation
+
+```
+logic [15:0] val1, val2;
+norm_rom lut (
+    .addr(addr),
+    .val1(val1),
+    .val2(val2)
+); 
+
+logic signed [15:0] delta;
+logic signed [21:0] interp_mult;
+logic signed [15:0] interp;
+
+always_comb begin
+    delta       = val2 - val1;
+    interp_mult = delta * frac;       // Q4.12 * Q0.6 = Q4.18
+    interp      = interp_mult >>> 6;  // Shift back to Q4.12
+    n_out       = val1 + interp;      // Final interpolated output
+end
+
+```
+
+* **Dual Readout (`norm_rom`):** Returns two consecutive table values: `val1` (value at `addr`) and `val2` (value at `addr + 1`).
+* **Linear Interpolation Formula:**
+
+$$y = y_1 + (y_2 - y_1) \times \frac{\text{remainder}}{\text{step\_size}}$$
+
+
+* **Fixed-Point Math Breakdown:**
+1. `delta = val2 - val1`: Difference between adjacent ROM points ($Q4.12$).
+2. `interp_mult = delta * frac`: Multiplies delta by the fractional offset ($Q4.12 \times Q0.6 = Q4.18$).
+3. `interp = interp_mult >>> 6`: Arithmetic right-shift by 6 scales the product back to $Q4.12$ precision (equivalent to dividing by the step-size weighting factor).
+4. `n_out = val1 + interp`: Adds the fractional offset to `val1` for the final interpolated result.
+---
+
 
 # `sqrt.sv`
 
