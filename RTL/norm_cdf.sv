@@ -1,27 +1,7 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/04/2025 12:21:47 PM
-// Design Name: 
-// Module Name: norm_cdf
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module norm_cdf(
-    input logic signed [15:0] x_in,
+    input  logic signed [15:0] x_in,
     output logic signed [15:0] n_out
     );
     
@@ -66,7 +46,7 @@ module norm_cdf(
     always_comb begin
         delta        = val2 - val1;
         interp_mult  = delta * frac;          // Q4.12 * Q0.6 = Q4.18
-        interp       = interp_mult[17:6];     // Shift back to Q4.12
+        interp       = interp_mult >>> 6;     // Shift back to Q4.12
         n_out        = val1 + interp;         // Final interpolated output
     end
 
