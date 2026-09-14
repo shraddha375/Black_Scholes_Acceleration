@@ -1,4 +1,4 @@
-## `sqrt.sv`
+# `sqrt.sv`
 
 This SystemVerilog module computes the **square root ($\sqrt{x}$)** for inputs in the range $[0.0, 16.0]$ using a **Look-Up Table (LUT)** approach. Like the previous modules, it uses fixed-point arithmetic to convert non-integer values into ROM addresses.
 
@@ -98,7 +98,7 @@ sqrt_rom rom_inst (
 * Instantiates `sqrt_rom`, a 513-entry ROM pre-loaded with Q6.10 square-root values.
 * Reads the output corresponding to `addr` and assigns it directly to `sqrt_out`.
 
-## `exp.sv`
+# `exp.sv`
 
 This SystemVerilog module computes the **exponential function ($e^x$)** for non-positive inputs ($x \le 0$) using a **Look-Up Table (LUT)** approach. It uses fixed-point arithmetic to map real decimal values into integer indices for a Read-Only Memory (ROM).
 
@@ -194,7 +194,7 @@ assign exp_out = out;
 * **`exp_rom`:** A 513-entry ROM pre-loaded with Q6.10 values of $e^x$ corresponding to each step address.
 * **Direct Readout:** Assigns the looked-up result directly to `exp_out` using step (nearest-lower-neighbor) mapping without linear interpolation.
 
-## `ln.sv`
+# `ln.sv`
 
 This SystemVerilog module computes the **natural logarithm ($\ln(x)$)** using a **Look-Up Table (LUT)** approach. It maps non-integer numbers into a 16-bit fixed-point representation and accesses pre-computed logarithm values from a Read-Only Memory (ROM).
 
