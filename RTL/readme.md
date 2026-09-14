@@ -1,3 +1,115 @@
+# `black_scholes.sv`
+
+This SystemVerilog module implements a **Black-Scholes European Call Option Pricing Engine**. It integrates all the mathematical building blocks analyzed previously (`ln`, `sqrt`, `exp`, and `norm_cdf`) into a pipelined **Finite State Machine (FSM)**.
+
+---
+
+### Black-Scholes Mathematical Formula
+
+The hardware evaluates the standard European Call Option formula:
+
+$$C = S \cdot N(d_1) - K \cdot e^{-rT} \cdot N(d_2)$$
+
+Where intermediate terms $d_1$ and $d_2$ are defined as:
+
+$$d_1 = \frac{\ln(S/K) + \left(r + \frac{\sigma^2}{2}\right)T}{\sigma \sqrt{T}}, \quad d_2 = d_1 - \sigma \sqrt{T}$$
+
+#### Inputs & Financial Variables
+
+* `S`: Current Asset/Stock Price (Q6.10)
+* `K`: Strike Price (Q6.10)
+* `r`: Risk-Free Interest Rate (Q6.10)
+* `sigma` ($\sigma$): Volatility (Q6.10)
+* `T`: Time to Maturity in years (Q6.10)
+
+---
+
+### Format Alignment: Q6.10 vs Q4.12
+
+The top-level inputs/outputs and most submodules (`ln`, `sqrt`, `exp`) use **Q6.10 fixed-point arithmetic** ($1.0 = 1024$).
+
+However, the `norm_cdf` module expects a **Q4.12 input** ($1.0 = 4096$).
+To convert Q6.10 data to Q4.12 before feeding `norm_cdf`, the module shifts the values left by 2 bits (`<<< 2`, since $2^2 = 4$). To shift `norm_cdf` outputs back to Q6.10, it shifts right by 2 bits (`>>> 2`).
+
+---
+
+### Step-by-Step FSM State Execution
+
+The FSM controls a 4-stage pipeline that computes independent terms in parallel before accumulating the final option price.
+
+```
++------+    +-------+    +-------+    +-------+    +-------+    +------+
+| IDLE | -> | CALC1 | -> | CALC2 | -> | CALC3 | -> | CALC4 | -> | DONE |
++------+    +-------+    +-------+    +-------+    +-------+    +------+
+
+```
+
+#### 1. State `CALC1`: Base Sub-Calculations
+
+```systemverilog
+ln_input   <= (S <<< 10) / K;
+sqrt_input <= T;
+rate_term  <= r + ((sig_inter * sig_inter) >>> 11);
+
+```
+
+* **$\ln(S/K)$ Prep:** Multiplies $S$ by $1024$ (`<<< 10`) before dividing by $K$ to preserve fixed-point precision. The result is fed to `ln_inst`.
+* **$\sqrt{T}$ Prep:** Feeds $T$ directly into `sqrt_inst`.
+* **Rate Term ($r + \frac{\sigma^2}{2}$):** Squaring $\sigma$ yields $Q12.20$. Shifting right by 11 divides by $2 \times 1024 = 2048$, leaving a Q6.10 value for $\frac{\sigma^2}{2}$.
+
+#### 2. State `CALC2`: $d_1$ Numerator & Denominator
+
+```systemverilog
+numerator <= ((rate_term * T) >>> 10) + ln_result;
+denom     <= (sig_inter * sqrt_result) >>> 10;
+
+```
+
+* **Numerator:** Multiplies $(r + \frac{\sigma^2}{2})$ by $T$, scales down by 1024 (`>>> 10`), and adds the output from `ln_inst` ($\ln(S/K)$).
+* **Denominator:** Multiplies $\sigma$ by the output from `sqrt_inst` ($\sqrt{T}$) and rescales to Q6.10.
+
+#### 3. State `CALC3`: Term Computation ($d_1$, $d_2$, Discount, $N(d)$)
+
+```systemverilog
+exp_input   <= -((r_inter * T) >>> 10);
+norm1_input <= ((numerator <<< 10) / denom) <<< 2;
+norm2_input <= (((numerator <<< 10) / denom) - denom) <<< 2;
+
+```
+
+* **Discount Factor ($e^{-rT}$):** Computes $-r \cdot T$ in Q6.10 and feeds it into `exp_inst`.
+* **$d_1$ Calculation:** Computes $\frac{\text{numerator}}{\text{denominator}}$ and converts Q6.10 to Q4.12 (`<<< 2`) for `norm1` ($N(d_1)$).
+* **$d_2$ Calculation:** Computes $d_1 - \text{denominator}$ ($\sigma \sqrt{T}$) and converts to Q4.12 (`<<< 2`) for `norm2` ($N(d_2)$).
+
+#### 4. State `CALC4`: Final Call Price Assembly
+
+```systemverilog
+call_price <= ((s_inter * (norm1_result >>> 2)) >>> 10)
+            - (((k_inter * exp_result) >>> 10) * (norm2_result >>> 2) >>> 10);
+
+```
+
+Evaluates the final formula:
+
+1. **Stock Term:** $S \cdot N(d_1)$
+2. **Strike Term:** $K \cdot e^{-rT} \cdot N(d_2)$
+3. **Subtraction:** Subtracts the strike term from the stock term to yield `call_price`.
+
+#### 5. State `DONE`
+
+* Asserts the `done` high signal indicating the computation is complete and `call_price` is valid.
+
+---
+
+### Summary of Module Architecture
+
+| Pipeline Stage | Mathematical Operations Executed | Modules Triggered |
+| --- | --- | --- |
+| **`CALC1`** | $S/K$, $r + \sigma^2/2$ | `ln_inst`, `sqrt_inst` |
+| **`CALC2`** | $\ln(S/K) + (r + \sigma^2/2)T$, $\sigma\sqrt{T}$ | Combinational Dividers/Multipliers |
+| **`CALC3`** | $-rT$, $d_1 = \text{Num}/\text{Denom}$, $d_2 = d_1 - \text{Denom}$ | `exp_inst`, `norm1`, `norm2` |
+| **`CALC4`** | $S \cdot N(d_1) - K \cdot e^{-rT} \cdot N(d_2)$ | Final Output Register |
+
 # `norm_cdf.sv`
 
 This SystemVerilog module computes the **Cumulative Distribution Function (CDF) of a Normal Distribution** $\Phi(x)$ over the range $x \in [-5.0, 5.0]$ using a **Look-Up Table (LUT) with Linear Interpolation**.
