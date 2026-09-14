@@ -1,3 +1,88 @@
+# `norm_cdf.sv`
+
+This SystemVerilog module computes the **Cumulative Distribution Function (CDF) of a Normal Distribution** ($\Phi(x)$) over the range $x \in [-5.0, 5.0]$ using a **Look-Up Table (LUT) with Linear Interpolation**.
+
+Unlike the previous modules, this code uses a **Q4.12 fixed-point format** and performs piecewise-linear interpolation to improve calculation precision between ROM entries.
+
+---
+
+### Core Data Representation (Q4.12 Format)
+
+The module operates using **16-bit signed Q4.12 fixed-point arithmetic**:
+
+* **1 Sign Bit:** Represents positive/negative sign.
+* **3 Integer Bits:** Represent whole numbers.
+* **12 Fractional Bits:** Provide a scaling factor of $2^{12} = 4096$.
+
+Because $1.0 = 4096$, real numbers translate to integers by multiplying by $4096$:
+
+* **$x = 0.0$:** $0.0 \times 4096 = \mathbf{0}$
+* **$x = -5.0$:** $-5.0 \times 4096 = \mathbf{-20480}$ (or `-5 <<< 12`)
+* **$x = +5.0$:** $+5.0 \times 4096 = \mathbf{20480}$ (or `5 <<< 12`)
+
+---
+
+### Mathematical Domain & Output Range
+
+The standard normal CDF $\Phi(x)$ measures probability:
+
+* **Lower Bound ($x = -5.0$):** $\Phi(-5.0) \approx 0.00000029 \rightarrow \text{Q4.12 value } \mathbf{0}$
+* **Center ($x = 0.0$):** $\Phi(0.0) = 0.5 \rightarrow 0.5 \times 4096 = \mathbf{2048}$
+* **Upper Bound ($x = +5.0$):** $\Phi(+5.0) \approx 0.9999997 \rightarrow 1.0 \times 4096 = \mathbf{4096}$
+
+The output value probability range $[0.0, 1.0]$ fits within $[0, 4096]$ in Q4.12 precision.
+
+---
+
+### Step-by-Step Code Walkthrough
+
+#### 1. Input Clamping (Domain Enforcement)
+
+```
+logic signed [15:0] x_clamped;
+always_comb begin
+    if (x_in < -16'sd20480)
+        x_clamped = (-5 <<< 12);
+    else if (x_in > (5 <<< 12))
+        x_clamped = (5 <<< 12);
+    else
+        x_clamped = x_in;
+end
+
+```
+
+* **Domain Limit ($[-5.0, 5.0]$):** Beyond $\pm 5.0$ standard deviations, the normal CDF is effectively $0.0$ or $1.0$.
+* **Implementation:** `5 <<< 12` dynamically shifts the integer $5$ by 12 bits to produce `20480`. Any input lower than `-20480` or higher than `20480` is clamped to prevent memory lookup overflow.
+
+---
+
+#### 2. Address & Fractional Offset Calculation
+
+```
+logic signed [16:0] x_offset;
+always_comb begin
+    x_offset = x_clamped + (5 <<< 12); // Shift range to [0, 10.0]
+end
+
+logic [9:0] addr;
+logic [5:0] frac;
+always_comb begin
+    addr = x_offset / 80;
+    frac = x_offset % 80;
+end
+
+```
+
+* **Domain Shift:** Adding `20480` shifts the input domain from $[-5.0, +5.0]$ to $[0.0, 10.0]$ (`0` to `40960` in Q4.12). A 17-bit register (`x_offset`) is used to prevent signed overflow during addition.
+* **Base Address (`addr`):** Dividing by `80` divides the domain into steps of $\frac{80}{4096} \approx 0.01953$.
+* Max address: $40960 \div 80 = \mathbf{512}$ (requires a **513-entry ROM**).
+
+
+* **Fractional Part (`frac`):** The modulo operator `% 80` extracts the remainder (range $[0, 79]$), representing the distance between the lower ROM entry (`val1`) and upper ROM entry (`val2`).
+
+---
+
+
 # `sqrt.sv`
 
 This SystemVerilog module computes the **square root ($\sqrt{x}$)** for inputs in the range $[0.0, 16.0]$ using a **Look-Up Table (LUT)** approach. Like the previous modules, it uses fixed-point arithmetic to convert non-integer values into ROM addresses.
