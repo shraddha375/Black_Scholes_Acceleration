@@ -108,7 +108,7 @@ end
 * **Dual Readout (`norm_rom`):** Returns two consecutive table values: `val1` (value at `addr`) and `val2` (value at `addr + 1`).
 * **Linear Interpolation Formula:**
 
-$y = y_1 + (y_2 - y_1) \times \frac{\text{remainder}}{\text{step\_size}}$
+    $$y = y_1 + (y_2 - y_1) \times \frac{\text{remainder}}{\text{stepSize}}$$
 
 
 * **Fixed-Point Math Breakdown:**
