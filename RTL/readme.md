@@ -1,3 +1,77 @@
+# `design_top.sv`
+
+This `design_top` SystemVerilog module coordinates an external SPI master (like an ESP32) with an on-chip Black-Scholes financial option pricing core. It uses a **two-transaction protocol** to isolate SPI transfer speed from the core's computation time.
+
+---
+
+### High-Level Architecture
+
+* **`spi_slave` Instance (`spi_inst`):** Handles byte-level SPI communication, clock domain synchronization, and edge detection for `cs_n`.
+* **`black_scholes` Instance (`bs_core`):** Fixed-point math accelerator (Q6.10 format) that calculates the call option price.
+* **Framer / Deframer State Machine:** Manages incoming parameter reception, checksum validation, calculation triggering, and outgoing result transmission.
+
+---
+
+### Communication Protocol Breakdown
+
+#### Transaction 1: Master Write Request (12 Bytes)
+
+1. **Byte 0:** `0xAA` (Sync byte (`SYNC_REQ`)).
+2. **Bytes 1–10:** 5 parameter inputs (16-bit signed, Little-Endian Q6.10):
+* `S` (Stock Price)
+* `K` (Strike Price)
+* `r` (Risk-Free Rate)
+* `sigma` (Volatility)
+* `T` (Time to Expiry)
+
+
+3. **Byte 11:** Checksum (XOR of payload bytes 1–10).
+
+#### Computation Phase
+
+* The master raises `cs_n` (ending Transaction 1).
+* Top-level state machine validates the checksum:
+* **Pass:** Latches inputs into `S, K, r, sigma, T` and asserts `bs_start`.
+* **Fail:** Aborts transaction and resets to `PH_IDLE_REQ`.
+
+
+* Once `bs_done` asserts, the result is formatted, `led0` toggles, and `spi_rdy` goes high.
+
+#### Transaction 2: Master Read Response (4 Bytes)
+
+* Master polls `spi_rdy`; once high, it asserts `cs_n` to start reading:
+1. **Byte 0:** `0x55` (Sync byte (`SYNC_RSP`)).
+2. **Bytes 1–2:** Calculated `call_price` (Little-Endian).
+3. **Byte 3:** Checksum (XOR of bytes 1 & 2).
+
+
+* When `cs_n` rises, `spi_rdy` drops back low, returning the FPGA to `PH_IDLE_REQ`.
+
+---
+
+### FSM State Definitions
+
+| State | Role |
+| --- | --- |
+| **`PH_IDLE_REQ`** | Waits for `trans_start` (falling edge of CS). |
+| **`PH_RX_PAYLOAD`** | Validates initial `0xAA` sync byte and stores incoming 10 payload bytes into array `payload`. |
+| **`PH_RX_CHK`** | Captures the 12th byte as `rx_checksum`. |
+| **`PH_WAIT_CS_END`** | Waits for Transaction 1 to complete (`trans_end`). |
+| **`PH_VALIDATE`** | Computes XOR across all 10 payload bytes and compares against `rx_checksum`. |
+| **`PH_LATCH`** | Assembles Little-Endian byte pairs into 16-bit register signals. |
+| **`PH_START_CALC`** | Asserts `bs_start` pulse to launch `bs_core`. |
+| **`PH_WAIT_CALC`** | Waits for `bs_done`, formats 4 response bytes, and asserts `spi_rdy`. |
+| **`PH_READY`** | Holds output high, pre-loads `0x55` into `tx_data`, and waits for `trans_start`. |
+| **`PH_TX_RESPONSE`** | Streams out the 4 response bytes on each `byte_done` pulse until `trans_end` resets `spi_rdy`. |
+
+---
+
+### Potential Edge Cases & Considerations
+
+* **Combinational Logic in Sequential Block:** In `PH_VALIDATE`, `calc_checksum` uses procedural block assignment (`=`). Because it runs in a single clock cycle, it synthesizes into a multi-input XOR tree.
+* **Buffer Underrun Handling:** If the master clocks more than 4 bytes during Transaction 2, `PH_TX_RESPONSE` retains `tx_bytes[3]` indefinitely without throwing an error.
+* **CS Abort Protection:** If the master drops CS prematurely during payload reception, the `if (trans_end)` checks safely return the state machine back to `PH_IDLE_REQ`.
+
 # `black_scholes.sv`
 
 This SystemVerilog module implements a **Black-Scholes European Call Option Pricing Engine**. It integrates all the mathematical building blocks analyzed previously (`ln`, `sqrt`, `exp`, and `norm_cdf`) into a pipelined **Finite State Machine (FSM)**.
