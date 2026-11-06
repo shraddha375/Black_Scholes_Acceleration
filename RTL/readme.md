@@ -152,8 +152,8 @@ norm2_input <= (((numerator <<< 10) / denom) - denom) <<< 2;
 ```
 
 * **Discount Factor ($e^{-rT}$):** Computes $-r \cdot T$ in Q6.10 and feeds it into `exp_inst`.
-* **$d_1$ Calculation:** Computes $\frac{\text{numerator}}{\text{denominator}}$ and converts Q6.10 to Q4.12 (`<<< 2`) for `norm1` ($N(d_1)$).
-* **$d_2$ Calculation:** Computes $d_1 - \text{denominator}$ ($\sigma \sqrt{T}$) and converts to Q4.12 (`<<< 2`) for `norm2` ($N(d_2)$).
+* **$d_1$ Calculation:** Computes $\frac{\text{numerator}}{\text{denominator}}$ and converts Q6.10 to Q4.12 (`<<< 2`) for `norm1` $N(d_1)$.
+* **$d_2$ Calculation:** Computes $d_1 - \text{denominator}$ ($\sigma \sqrt{T}$) and converts to Q4.12 (`<<< 2`) for `norm2` $N(d_2)$.
 
 #### 4. State `CALC4`: Final Call Price Assembly
 
