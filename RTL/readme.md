@@ -384,9 +384,9 @@ $$\frac{32}{1024} = 0.03125$$
 
 
 * **Address Range Analysis:**
-* Minimum Address ($x = 0.0$): $0 \div 32 = \mathbf{0}$
-* Maximum Address ($x = 16.0$): $16384 \div 32 = \mathbf{512}$
-* Total ROM Size: **513 entries** (Addresses `0` through `512`).
+  * Minimum Address ($x = 0.0$): $0 \div 32 = \mathbf{0}$
+  * Maximum Address ($x = 16.0$): $16384 \div 32 = \mathbf{512}$
+  * Total ROM Size: **513 entries** (Addresses `0` through `512`).
 
 
 
@@ -475,9 +475,9 @@ end
 * **Base Shift (`offset = x_clamped + 10240`):** Adds `10240` to translate the input range from $[-10240, 0]$ into a non-negative range $[0, 10240]$.
 * **Address Downscaling (`addr = offset / 20`):** Maps the offset into intervals of `20` Q6.10 units ($\approx 0.01953$).
 * **Address Range Analysis:**
-* Minimum Address ($x = -10.0$): $(-10240 + 10240) / 20 = \mathbf{0}$
-* Maximum Address ($x = 0.0$): $(0 + 10240) / 20 = 10240 / 20 = \mathbf{512}$
-* Total ROM Size: **513 entries** (Addresses `0` through `512`).
+  * Minimum Address ($x = -10.0$): $(-10240 + 10240) / 20 = \mathbf{0}$
+  * Maximum Address ($x = 0.0$): $(0 + 10240) / 20 = 10240 / 20 = \mathbf{512}$
+  * Total ROM Size: **513 entries** (Addresses `0` through `512`).
 
 
 
