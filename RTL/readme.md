@@ -74,7 +74,7 @@ This `design_top` SystemVerilog module coordinates an external SPI master (like 
 
 # `black_scholes.sv`
 
-This SystemVerilog module implements a **Black-Scholes European Call Option Pricing Engine**. It integrates all the mathematical building blocks analyzed previously (`ln`, `sqrt`, `exp`, and `norm_cdf`) into a pipelined **Finite State Machine (FSM)**.
+This SystemVerilog module implements a **Black-Scholes European Call Option Pricing Engine**. It integrates all the mathematical building blocks (`ln`, `sqrt`, `exp`, and `norm_cdf`) into a pipelined **Finite State Machine (FSM)**.
 
 ---
 
