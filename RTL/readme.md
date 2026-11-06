@@ -307,7 +307,7 @@ end
 
 # `sqrt.sv`
 
-This SystemVerilog module computes the **square root ($\sqrt{x}$)** for inputs in the range $[0.0, 16.0]$ using a **Look-Up Table (LUT)** approach. Like the previous modules, it uses fixed-point arithmetic to convert non-integer values into ROM addresses.
+This SystemVerilog module computes the **square root ($\sqrt{x}$)** for inputs in the range $[0.0, 16.0]$ using a **Look-Up Table (LUT)** approach. It uses fixed-point arithmetic to convert non-integer values into ROM addresses.
 
 ---
 
