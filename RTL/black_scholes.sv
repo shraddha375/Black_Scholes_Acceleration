@@ -1,16 +1,16 @@
 `timescale 1ns / 1ps
 
 module black_scholes (
-    input  logic        clk,
-    input  logic        rst,
-    input  logic        start,
+    input  logic               clk,
+    input  logic               rst,
+    input  logic               start,
     input  logic signed [15:0] S,
     input  logic signed [15:0] K,
     input  logic signed [15:0] r,
     input  logic signed [15:0] sigma,
     input  logic signed [15:0] T,
 
-    output logic        done,
+    output logic               done,
     output logic signed [15:0] call_price
 );
 
@@ -75,7 +75,8 @@ module black_scholes (
             exp_input   <= 0;
             norm1_input <= 0;
             norm2_input <= 0;
-        end else begin
+        end 
+        else begin
             case (state)
                 IDLE: begin
                     done <= 0;
