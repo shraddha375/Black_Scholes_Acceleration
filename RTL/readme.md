@@ -139,7 +139,7 @@ denom     <= (sig_inter * sqrt_result) >>> 10;
 
 ```
 
-* **Numerator:** Multiplies $(r + \frac{\sigma^2}{2})$ by $T$, scales down by 1024 (`>>> 10`), and adds the output from `ln_inst` ($\ln(S/K)$).
+* **Numerator:** Multiplies $(r + \frac{\sigma^2}{2})$ by $T$, scales down by 1024 (`>>> 10`), and adds the output from `ln_inst` $\ln(S/K)$.
 * **Denominator:** Multiplies $\sigma$ by the output from `sqrt_inst` ($\sqrt{T}$) and rescales to Q6.10.
 
 #### 3. State `CALC3`: Term Computation ($d_1$, $d_2$, Discount, $N(d)$)
