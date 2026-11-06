@@ -540,7 +540,7 @@ end
 ```
 
 * **Why Clamp?** The natural logarithm is undefined for $x \le 0$ and approaches $-\infty$ as $x \to 0^+$. Clamping forces the input into the safe range $[0.01, 10.0]$ (`10` to `10240` in Q6.10).
-* **Lower Bound (`10`):** Prevents negative fixed-point overflow near zero.
+* **Lower Bound (`10`):** Prevents negative fixed-point overflow near zero. ---?
 * **Upper Bound (`10240`):** Caps the maximum input so memory size stays manageable.
 
 ---
